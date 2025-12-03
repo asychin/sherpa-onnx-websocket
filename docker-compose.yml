@@ -25,6 +25,8 @@ services:
       - SHERPA_DECODING_METHOD=${SHERPA_DECODING_METHOD:-modified_beam_search}
       - SHERPA_MAX_ACTIVE_PATHS=${SHERPA_MAX_ACTIVE_PATHS:-4}
       - SHERPA_AUTH_TOKEN=${SHERPA_AUTH_TOKEN:-}
+      - SHERPA_VAD_ENABLED=${SHERPA_VAD_ENABLED:-true}
+      - SHERPA_VAD_THRESHOLD=${SHERPA_VAD_THRESHOLD:-0.02}
     networks:
       - sherpa-network
 
@@ -49,6 +51,8 @@ services:
       - SHERPA_DECODING_METHOD=${SHERPA_DECODING_METHOD:-modified_beam_search}
       - SHERPA_MAX_ACTIVE_PATHS=${SHERPA_MAX_ACTIVE_PATHS:-4}
       - SHERPA_AUTH_TOKEN=${SHERPA_AUTH_TOKEN:-}
+      - SHERPA_VAD_ENABLED=${SHERPA_VAD_ENABLED:-true}
+      - SHERPA_VAD_THRESHOLD=${SHERPA_VAD_THRESHOLD:-0.02}
     networks:
       - sherpa-network
 

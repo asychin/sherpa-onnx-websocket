@@ -49,6 +49,21 @@ HOTWORDS_SCORE = float(os.environ.get('SHERPA_HOTWORDS_SCORE', 1.5))
 DECODING_METHOD = os.environ.get('SHERPA_DECODING_METHOD', 'greedy_search')
 MAX_ACTIVE_PATHS = int(os.environ.get('SHERPA_MAX_ACTIVE_PATHS', 4))
 
+# VAD (Voice Activity Detection) - фильтрация тишины
+VAD_ENABLED = os.environ.get('SHERPA_VAD_ENABLED', 'true').lower() == 'true'
+VAD_THRESHOLD = float(os.environ.get('SHERPA_VAD_THRESHOLD', 0.02))  # RMS порог (0.01-0.05)
+VAD_MIN_SPEECH_SEC = float(os.environ.get('SHERPA_VAD_MIN_SPEECH_SEC', 0.1))  # Мин. длина речи
+
+
+def is_speech(samples: np.ndarray) -> bool:
+    """Проверка наличия речи в аудио чанке (простой VAD на основе RMS)"""
+    if not VAD_ENABLED:
+        return True
+    
+    # Вычисляем RMS (Root Mean Square) - среднюю энергию сигнала
+    rms = np.sqrt(np.mean(samples ** 2))
+    return rms > VAD_THRESHOLD
+
 
 def load_model():
     """Загрузка модели Sherpa-ONNX"""
@@ -119,6 +134,8 @@ def load_model():
         logger.info(f"  - rule2 (short pause): {RULE2_SILENCE}s")
         logger.info(f"  - rule3 (max utterance): {RULE3_UTTERANCE}s")
     logger.info(f"Hotwords score: {HOTWORDS_SCORE}")
+    logger.info(f"VAD: {'ENABLED' if VAD_ENABLED else 'DISABLED'}" + 
+               (f" (threshold={VAD_THRESHOLD})" if VAD_ENABLED else ""))
     logger.info("-" * 50)
 
 
@@ -158,6 +175,11 @@ async def recognize(websocket):
     last_text = ""
     total_samples = 0
     start_time = time.time()
+    
+    # VAD state
+    silence_chunks = 0
+    speech_detected = False
+    min_speech_samples = int(VAD_MIN_SPEECH_SEC * sample_rate)
     
     try:
         async for message in websocket:
@@ -239,6 +261,18 @@ async def recognize(websocket):
                 samples = np.frombuffer(message, dtype=np.int16).astype(np.float32) / 32768.0
                 total_samples += len(samples)
                 
+                # VAD: проверяем наличие речи
+                if VAD_ENABLED:
+                    if is_speech(samples):
+                        speech_detected = True
+                        silence_chunks = 0
+                    else:
+                        silence_chunks += 1
+                        # Если речь уже была и пошла тишина - продолжаем обработку
+                        # Если речи не было - игнорируем чанк (защита от галлюцинаций)
+                        if not speech_detected:
+                            continue
+                
                 # Добавляем в stream
                 stream.accept_waveform(sample_rate, samples)
                 
@@ -264,6 +298,8 @@ async def recognize(websocket):
                     # Сбрасываем для нового предложения!
                     recognizer.reset(stream)
                     last_text = ""
+                    speech_detected = False  # Сбрасываем VAD состояние
+                    silence_chunks = 0
                 
                 elif partial_results:
                     # Получаем partial результат
