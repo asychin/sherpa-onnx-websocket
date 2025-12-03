@@ -1,82 +1,54 @@
 services:
   # ============================================
   # SHERPA-ONNX WebSocket Server - Streaming ASR
-  # Русский + Английский языки
-  # Полная совместимость с Vosk API!
+  # Configuration: .env file
   # ============================================
   
-  # ==================== РУССКИЙ ====================
+  # ==================== RUSSIAN ====================
   sherpa-ru:
     build:
       context: ./sherpa-onnx-server
       dockerfile: Dockerfile
     container_name: sherpa-server-ru
     ports:
-      - "2703:2700"
+      - "${SHERPA_RU_PORT:-2703}:2700"
     restart: unless-stopped
     environment:
-      # ====== МОДЕЛЬ ======
       - SHERPA_MODEL_DIR=/models
-      # vosk-model-streaming-ru (Zipformer2, INT8 ~70MB)
-      
-      # ====== CPU ОПТИМИЗАЦИЯ ======
-      - SHERPA_NUM_THREADS=8
-      
-      - SHERPA_SAMPLE_RATE=16000
-      
-      # ====== ENDPOINT DETECTION ======
-      - SHERPA_ENABLE_ENDPOINT=true
-      - SHERPA_RULE1_SILENCE=2.4
-      - SHERPA_RULE2_SILENCE=1.2
-      - SHERPA_RULE3_UTTERANCE=20.0
-      
-      # ====== HOTWORDS / PHRASE_LIST ======
-      - SHERPA_HOTWORDS_SCORE=1.5
-      
-      # ====== DECODING ======
-      - SHERPA_DECODING_METHOD=modified_beam_search
-      # modified_beam_search - ТРЕБУЕТСЯ для hotwords!
-      
-      - SHERPA_MAX_ACTIVE_PATHS=4
-      
+      - SHERPA_NUM_THREADS=${SHERPA_NUM_THREADS:-4}
+      - SHERPA_SAMPLE_RATE=${SHERPA_SAMPLE_RATE:-16000}
+      - SHERPA_ENABLE_ENDPOINT=${SHERPA_ENABLE_ENDPOINT:-true}
+      - SHERPA_RULE1_SILENCE=${SHERPA_RULE1_SILENCE:-2.4}
+      - SHERPA_RULE2_SILENCE=${SHERPA_RULE2_SILENCE:-1.2}
+      - SHERPA_RULE3_UTTERANCE=${SHERPA_RULE3_UTTERANCE:-20.0}
+      - SHERPA_HOTWORDS_SCORE=${SHERPA_HOTWORDS_SCORE:-1.5}
+      - SHERPA_DECODING_METHOD=${SHERPA_DECODING_METHOD:-modified_beam_search}
+      - SHERPA_MAX_ACTIVE_PATHS=${SHERPA_MAX_ACTIVE_PATHS:-4}
+      - SHERPA_AUTH_TOKEN=${SHERPA_AUTH_TOKEN:-}
     networks:
       - sherpa-network
 
-  # ==================== АНГЛИЙСКИЙ ====================
+  # ==================== ENGLISH ====================
   sherpa-en:
     build:
       context: ./sherpa-onnx-server-en
       dockerfile: Dockerfile
     container_name: sherpa-server-en
     ports:
-      - "2704:2700"
+      - "${SHERPA_EN_PORT:-2704}:2700"
     restart: unless-stopped
     environment:
-      # ====== МОДЕЛЬ ======
       - SHERPA_MODEL_DIR=/models
-      # sherpa-onnx-streaming-zipformer-en (Zipformer, INT8)
-      # Источник: csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
-      
-      # ====== CPU ОПТИМИЗАЦИЯ ======
-      - SHERPA_NUM_THREADS=8
-      
-      - SHERPA_SAMPLE_RATE=16000
-      
-      # ====== ENDPOINT DETECTION ======
-      - SHERPA_ENABLE_ENDPOINT=true
-      - SHERPA_RULE1_SILENCE=2.4
-      - SHERPA_RULE2_SILENCE=1.2
-      - SHERPA_RULE3_UTTERANCE=20.0
-      
-      # ====== HOTWORDS / PHRASE_LIST ======
-      - SHERPA_HOTWORDS_SCORE=1.5
-      
-      # ====== DECODING ======
-      - SHERPA_DECODING_METHOD=modified_beam_search
-      # modified_beam_search - ТРЕБУЕТСЯ для hotwords!
-      
-      - SHERPA_MAX_ACTIVE_PATHS=4
-      
+      - SHERPA_NUM_THREADS=${SHERPA_NUM_THREADS:-4}
+      - SHERPA_SAMPLE_RATE=${SHERPA_SAMPLE_RATE:-16000}
+      - SHERPA_ENABLE_ENDPOINT=${SHERPA_ENABLE_ENDPOINT:-true}
+      - SHERPA_RULE1_SILENCE=${SHERPA_RULE1_SILENCE:-2.4}
+      - SHERPA_RULE2_SILENCE=${SHERPA_RULE2_SILENCE:-1.2}
+      - SHERPA_RULE3_UTTERANCE=${SHERPA_RULE3_UTTERANCE:-20.0}
+      - SHERPA_HOTWORDS_SCORE=${SHERPA_HOTWORDS_SCORE:-1.5}
+      - SHERPA_DECODING_METHOD=${SHERPA_DECODING_METHOD:-modified_beam_search}
+      - SHERPA_MAX_ACTIVE_PATHS=${SHERPA_MAX_ACTIVE_PATHS:-4}
+      - SHERPA_AUTH_TOKEN=${SHERPA_AUTH_TOKEN:-}
     networks:
       - sherpa-network
 

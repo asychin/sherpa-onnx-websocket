@@ -80,35 +80,17 @@ Real-time speech recognition server with WebSocket interface, powered by [sherpa
 
 ## Quick Start
 
-### Docker Compose
+### 1. Configure
 
-```yaml
-version: '3.8'
+```bash
+# Copy example config
+cp .env.example .env
 
-services:
-  sherpa-asr:
-    build:
-      context: ./sherpa-onnx-server
-      dockerfile: Dockerfile
-    container_name: sherpa-asr
-    ports:
-      - "2700:2700"
-    restart: unless-stopped
-    environment:
-      - SHERPA_MODEL_DIR=/models
-      - SHERPA_NUM_THREADS=4
-      - SHERPA_SAMPLE_RATE=16000
-      - SHERPA_ENABLE_ENDPOINT=true
-      - SHERPA_DECODING_METHOD=modified_beam_search
-    networks:
-      - asr-network
-
-networks:
-  asr-network:
-    driver: bridge
+# Edit settings
+nano .env
 ```
 
-### Run
+### 2. Run
 
 ```bash
 # Build and start
@@ -121,9 +103,27 @@ docker compose logs -f
 docker compose down
 ```
 
+### Project Structure
+
+```
+├── docker-compose.yml       # Services configuration
+├── .env.example             # Example environment variables
+├── .env                     # Your local config (not in git)
+├── sherpa-onnx-server/      # Russian model server
+│   ├── Dockerfile
+│   ├── asr_server.py
+│   └── requirements.txt
+└── sherpa-onnx-server-en/   # English model server
+    ├── Dockerfile
+    ├── asr_server.py
+    └── requirements.txt
+```
+
 ---
 
 ## Configuration
+
+All settings are configured via `.env` file. Copy `.env.example` to `.env` and adjust values.
 
 ### Environment Variables
 
@@ -168,6 +168,28 @@ docker compose down
 | `modified_beam_search` | 🐢 Slower | Better | ✅ Yes | **Required for hotwords!** |
 
 > ⚠️ **Important:** If using `phrase_list` (hotwords), you MUST use `modified_beam_search`!
+
+### Example .env
+
+```bash
+# Ports
+SHERPA_RU_PORT=2700
+SHERPA_EN_PORT=2701
+
+# CPU
+SHERPA_NUM_THREADS=4
+
+# Endpoint detection
+SHERPA_ENABLE_ENDPOINT=true
+SHERPA_RULE1_SILENCE=2.4
+SHERPA_RULE2_SILENCE=1.2
+
+# Decoding (use modified_beam_search for hotwords)
+SHERPA_DECODING_METHOD=modified_beam_search
+
+# Authorization (leave empty to disable)
+SHERPA_AUTH_TOKEN=
+```
 
 ---
 
